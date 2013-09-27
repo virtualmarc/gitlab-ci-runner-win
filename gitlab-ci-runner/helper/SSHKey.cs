@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 
 namespace gitlab_ci_runner.helper
 {
@@ -14,10 +15,20 @@ namespace gitlab_ci_runner.helper
         /// </summary>
         public static void generateKeypair()
         {
+            try {
+                Directory.CreateDirectory(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"\.ssh");
+            } catch (Exception) {}
             Process p = new Process();
             p.StartInfo.FileName = "ssh-keygen";
             p.StartInfo.Arguments = "-t rsa -f " + Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"\.ssh\id_rsa -N """;
             p.Start();
+            Console.WriteLine();
+            Console.WriteLine("Waiting for SSH Key to be generated ...");
+            while (!File.Exists(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"\.ssh\id_rsa.pub"))
+            {
+                Thread.Sleep(1000);
+            }
+            Console.WriteLine("SSH Key generated successfully!");
         }
 
         /// <summary>
