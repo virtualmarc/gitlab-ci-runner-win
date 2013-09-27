@@ -32,6 +32,26 @@ namespace gitlab_ci_runner.helper
         }
 
         /// <summary>
+        /// POST a String to an URL
+        /// </summary>
+        /// <param name="sUrl">URL</param>
+        /// <param name="sContent">String to POST</param>
+        /// <returns>Server Response</returns>
+        private static string post(String sUrl, String sContent)
+        {
+            try
+            {
+                WebClient wc = new WebClient();
+                wc.Headers["Content-Type"] = "application/json";
+                return wc.UploadString(sUrl, "POST", sContent);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
         /// Gitlab CI API URL
         /// </summary>
         private static string apiurl
@@ -51,7 +71,7 @@ namespace gitlab_ci_runner.helper
         public static string registerRunner(String sPubKey, String sToken)
         {
             string sJsonBody = new { public_key = sPubKey, token = sToken }.ToJson();
-            string sResp = put(apiurl + "/runners/register.json", sJsonBody);
+            string sResp = post(apiurl + "/runners/register.json", sJsonBody);
             if (sResp != null)
             {
                 try

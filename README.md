@@ -14,6 +14,8 @@ The following programs are needed:
 
 [mysysgit](http://msysgit.github.io/) (Install with openssh style ssh key support, not with putty keys)
 
+Don't forget to add the git/bin directory (usually C:\Program Files\Git\bin) to your PATH variable!
+
 Installation
 ------------
 
