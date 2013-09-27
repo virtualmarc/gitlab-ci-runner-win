@@ -40,6 +40,30 @@ namespace gitlab_ci_runner.setup
         /// </summary>
         private static void registerRunner()
         {
+            // Read Token
+            string sToken = "";
+            while (sToken == "")
+            {
+                Console.WriteLine("Please enter the gitlab-ci token for this runner:");
+                sToken = Console.ReadLine();
+            }
+
+            // Register Runner
+            string sTok = Network.registerRunner(SSHKey.getPublicKey(), sToken);
+            if (sTok != null)
+            {
+                // Save Config
+                Config.token = sTok;
+                Config.saveConfig();
+
+                Console.WriteLine();
+                Console.WriteLine("Runner registered successfully. Feel free to start it!");
+            }
+            else
+            {
+                Console.WriteLine();
+                Console.WriteLine("Failed to register this runner. Perhaps your SSH key is invalid or you are having network problems");
+            }
         }
     }
 }

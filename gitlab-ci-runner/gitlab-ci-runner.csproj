@@ -46,6 +46,7 @@
   <ItemGroup>
     <Compile Include="conf\Config.cs" />
     <Compile Include="helper\IniFile.cs" />
+    <Compile Include="helper\json\RegisterResponse.cs" />
     <Compile Include="helper\Network.cs" />
     <Compile Include="helper\SSHKey.cs" />
     <Compile Include="helper\TextFile.cs" />
