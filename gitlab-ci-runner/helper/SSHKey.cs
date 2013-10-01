@@ -24,6 +24,7 @@ namespace gitlab_ci_runner.helper
             p.Start();
             Console.WriteLine();
             Console.WriteLine("Waiting for SSH Key to be generated ...");
+            p.WaitForExit();
             while (!File.Exists(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"\.ssh\id_rsa.pub"))
             {
                 Thread.Sleep(1000);

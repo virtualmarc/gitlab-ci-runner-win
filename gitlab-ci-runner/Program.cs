@@ -24,6 +24,7 @@ namespace gitlab_ci_runner
                 // Load the setup
                 Setup.run();
             }
+            Console.ReadLine();
         }
     }
 }
