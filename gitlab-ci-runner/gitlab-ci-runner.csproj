@@ -24,12 +24,15 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugType>pdbonly</DebugType>
+    <DebugType>none</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>
+    </DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationManifest>app.manifest</ApplicationManifest>
@@ -49,11 +52,15 @@
   <ItemGroup>
     <Compile Include="conf\Config.cs" />
     <Compile Include="helper\IniFile.cs" />
+    <Compile Include="helper\json\BuildInfo.cs" />
     <Compile Include="helper\Network.cs" />
     <Compile Include="helper\SSHKey.cs" />
     <Compile Include="helper\TextFile.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="runner\Build.cs" />
+    <Compile Include="runner\Runner.cs" />
+    <Compile Include="runner\State.cs" />
     <Compile Include="setup\Setup.cs" />
   </ItemGroup>
   <ItemGroup>

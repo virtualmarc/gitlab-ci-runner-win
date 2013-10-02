@@ -24,7 +24,7 @@ namespace gitlab_ci_runner.conf
         /// <summary>
         /// Configuration Path
         /// </summary>
-        private static string confPath = Assembly.GetExecutingAssembly().Location + @"\runner.cfg";
+        private static string confPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\runner.cfg";
 
         /// <summary>
         /// Load the configuration

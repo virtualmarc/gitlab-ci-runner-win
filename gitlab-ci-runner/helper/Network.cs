@@ -7,6 +7,8 @@ using System.Text;
 using System.Threading;
 using System.Web;
 using gitlab_ci_runner.conf;
+using gitlab_ci_runner.helper.json;
+using gitlab_ci_runner.runner;
 using ServiceStack.Text;
 
 namespace gitlab_ci_runner.helper
@@ -24,7 +26,8 @@ namespace gitlab_ci_runner.helper
             try
             {
                 WebClient wc = new WebClient();
-                wc.Headers["Content-Type"] = "application/json";
+                wc.Headers["Content-Type"] = "application/x-www-form-urlencoded";
+                wc.Headers["Accept"] = "*/*";
                 return wc.UploadString(sUrl, "PUT", sContent);
             }
             catch (Exception)
@@ -50,23 +53,6 @@ namespace gitlab_ci_runner.helper
                     wc.Headers["Content-Type"] = "application/x-www-form-urlencoded";
                     wc.Headers["Accept"] = "*/*";
                     return wc.UploadString(sUrl, "POST", sContent);
-                    //HttpWebRequest webReq = (HttpWebRequest)WebRequest.Create(sUrl);
-                    //webReq.Method = "POST";
-                    //webReq.ContentType = "text/html";
-                    //webReq.Accept = "*/*";
-                    //webReq.Headers.Add("Accept", "*/*");
-                    //byte[] data = Encoding.ASCII.GetBytes(sContent);
-                    //webReq.ContentLength = data.Length;
-                    //webReq.KeepAlive = false;
-                    //webReq.Timeout = 10000;
-                    //Stream srequest = webReq.GetRequestStream();
-                    //srequest.Write(data, 0, data.Length);
-                    //srequest.Close();
-                    //StreamReader srresponse = new StreamReader(webReq.GetResponse().GetResponseStream());
-                    //String sresponse = srresponse.ReadToEnd();
-                    //srresponse.Close();
-                    //Console.WriteLine("RESP: " + sresponse);
-                    //return sresponse;
                 }
                 catch (Exception)
                 {
@@ -114,6 +100,98 @@ namespace gitlab_ci_runner.helper
             {
                 return null;
             }
+        }
+
+        /// <summary>
+        /// Get a new build
+        /// </summary>
+        /// <returns>BuildInfo object or null on error/no build</returns>
+        public static BuildInfo getBuild()
+        {
+            Console.WriteLine("* Checking for builds...");
+            string sPostBody = "token=" + Uri.EscapeDataString(Config.token);
+            string sResp = post(apiurl + "/builds/register.json", sPostBody);
+            try
+            {
+                if (!String.IsNullOrEmpty(sResp))
+                {
+                    JsonObject obj = JsonObject.Parse(sResp);
+                    if (obj != null)
+                    {
+                        BuildInfo info = new BuildInfo();
+                        info.id = obj.Get<int>("id");
+                        info.project_id = obj.Get<int>("project_id");
+                        info.commands = obj.Get<string[]>("commands");
+                        info.repo_url = obj.Get("repo_url");
+                        info.reference = obj.Get("sha");
+                        info.ref_name = obj.Get("ref");
+                        return info;
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("* Nothing");
+                }
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("* Failed");
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// PUSH the Build to the Gitlab CI Coordinator
+        /// </summary>
+        /// <param name="iId">Build ID</param>
+        /// <param name="state">State</param>
+        /// <param name="sTrace">Command output</param>
+        /// <returns></returns>
+        public static bool pushBuild(int iId, State state, string sTrace)
+        {
+            Console.WriteLine("[" + DateTime.Now.ToString() + "] Submitting build " + iId + " to coordinator ...");
+            String sPutBody = "token=" + Uri.EscapeDataString(Config.token) + "&state=";
+            if (state == State.RUNNING)
+            {
+                sPutBody += "running";
+            }
+            else if (state == State.SUCCESS)
+            {
+                sPutBody += "success";
+            }
+            else if (state == State.FAILED)
+            {
+                sPutBody += "failed";
+            }
+            else
+            {
+                sPutBody += "waiting";
+            }
+            sPutBody += "&trace=" + Uri.EscapeDataString(sTrace);
+
+            int iTry = 0;
+            while (iTry <= 5)
+            {
+                try
+                {
+                    if (put(apiurl + "/builds/" + iId + ".json", sPutBody) != null)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        iTry++;
+                        Thread.Sleep(1000);
+                    }
+                }
+                catch (Exception)
+                {
+                    iTry++;
+                    Thread.Sleep(1000);
+                }
+            }
+
+            return false;
         }
     }
 }
