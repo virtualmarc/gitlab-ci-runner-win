@@ -71,7 +71,16 @@ namespace gitlab_ci_runner.runner
         /// </summary>
         private LinkedList<string> commands;
 
+        /// <summary>
+        /// Execution State
+        /// </summary>
         public State state = State.WAITING;
+
+        /// <summary>
+        /// Command Timeout
+        /// Read from Gitlab CI API later
+        /// </summary>
+        public int iTimeout = 7200;
 
         /// <summary>
         /// Constructor
@@ -194,7 +203,10 @@ namespace gitlab_ci_runner.runner
                 // Run the command
                 p.Start();
                 p.BeginOutputReadLine();
-                p.WaitForExit();
+                if (!p.WaitForExit(iTimeout*1000))
+                {
+                    p.Kill();
+                }
                 return p.ExitCode == 0;
             }
             catch (Exception)
