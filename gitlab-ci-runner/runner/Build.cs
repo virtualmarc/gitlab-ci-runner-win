@@ -46,8 +46,7 @@ namespace gitlab_ci_runner.runner
                 {
                     sOut += line + "\n";
                 }
-                byte[] bytes = Encoding.Default.GetBytes(sOut);
-                return Encoding.UTF8.GetString(bytes);
+				return sOut;
             }
         }
 

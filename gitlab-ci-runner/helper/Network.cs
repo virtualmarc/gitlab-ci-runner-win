@@ -15,6 +15,19 @@ namespace gitlab_ci_runner.helper
 {
     class Network
     {
+		private static string webRequest(string sUrl, string sMethod, string sContent) {
+			WebRequest wr = HttpWebRequest.Create(sUrl);
+			wr.ContentType = "application/x-www-form-urlencoded;charset=utf-8";
+			wr.ContentLength = sContent.Length;
+			wr.Timeout = 2500;
+			wr.Method = sMethod;
+			StreamWriter requestStream = new StreamWriter(wr.GetRequestStream(), Encoding.ASCII);
+			requestStream.Write(sContent);
+			requestStream.Close();
+			StreamReader responseRequest = new StreamReader(wr.GetResponse().GetResponseStream(), Encoding.UTF8);
+			return responseRequest.ReadToEnd();
+		}
+		
         /// <summary>
         /// PUT a String to an URL
         /// </summary>
@@ -25,10 +38,7 @@ namespace gitlab_ci_runner.helper
         {
             try
             {
-                WebClient wc = new WebClient();
-                wc.Headers["Content-Type"] = "application/x-www-form-urlencoded";
-                wc.Headers["Accept"] = "*/*";
-                return wc.UploadString(sUrl, "PUT", sContent);
+                return webRequest(sUrl, "PUT",sContent);
             }
             catch (Exception)
             {
@@ -49,10 +59,7 @@ namespace gitlab_ci_runner.helper
             {
                 try
                 {
-                    WebClient wc = new WebClient();
-                    wc.Headers["Content-Type"] = "application/x-www-form-urlencoded";
-                    wc.Headers["Accept"] = "*/*";
-                    return wc.UploadString(sUrl, "POST", sContent);
+                    return webRequest(sUrl, "POST", sContent);
                 }
                 catch (Exception)
                 {
@@ -121,7 +128,7 @@ namespace gitlab_ci_runner.helper
                         BuildInfo info = new BuildInfo();
                         info.id = obj.Get<int>("id");
                         info.project_id = obj.Get<int>("project_id");
-                        info.commands = obj.Get<string[]>("commands");
+						info.commands = System.Text.RegularExpressions.Regex.Replace(obj.Get<string>("commands"), "[\r|\n]+$", "\n").Split('\n');
                         info.repo_url = obj.Get("repo_url");
                         info.reference = obj.Get("sha");
                         info.ref_name = obj.Get("ref");
