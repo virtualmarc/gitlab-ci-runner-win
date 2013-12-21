@@ -203,6 +203,7 @@ namespace gitlab_ci_runner.runner
                 // Run the command
                 p.Start();
                 p.BeginOutputReadLine();
+                p.BeginErrorReadLine();
                 if (!p.WaitForExit(iTimeout*1000))
                 {
                     p.Kill();
