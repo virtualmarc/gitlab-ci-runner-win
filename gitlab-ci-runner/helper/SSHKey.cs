@@ -15,6 +15,11 @@ namespace gitlab_ci_runner.helper
         /// </summary>
         public static void generateKeypair()
         {
+            if (File.Exists(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"\.ssh\id_rsa.pub"))
+            {
+                return;
+            }
+
             try {
                 Directory.CreateDirectory(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"\.ssh");
             } catch (Exception) {}
