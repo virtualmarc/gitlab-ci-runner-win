@@ -16,7 +16,7 @@
             Wenn Sie Datei- und Registrierungsvirtualisierung für Abwärts- 
             kompatibilität verwenden möchten, löschen Sie den requestedExecutionLevel-Knoten.
         -->
-        <requestedExecutionLevel level="requireAdministrator" uiAccess="false" />
+        <requestedExecutionLevel level="asInvoker" uiAccess="false" />
       </requestedPrivileges>
     </security>
   </trustInfo>
