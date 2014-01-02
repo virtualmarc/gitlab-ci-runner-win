@@ -15,7 +15,11 @@ namespace gitlab_ci_runner.helper
         /// </summary>
         public static void generateKeypair()
         {
-            if (File.Exists(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"\.ssh\id_rsa.pub"))
+            // We need both, the Public and Private Key
+            // Public Key to send to Gitlab
+            // Private Key to connect to Gitlab later
+            if (File.Exists(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"\.ssh\id_rsa.pub") &&
+                File.Exists(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"\.ssh\id_rsa"))
             {
                 return;
             }
@@ -30,7 +34,8 @@ namespace gitlab_ci_runner.helper
             Console.WriteLine();
             Console.WriteLine("Waiting for SSH Key to be generated ...");
             p.WaitForExit();
-            while (!File.Exists(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"\.ssh\id_rsa.pub"))
+            while (!File.Exists(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"\.ssh\id_rsa.pub") &&
+                   !File.Exists(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"\.ssh\id_rsa"))
             {
                 Thread.Sleep(1000);
             }
