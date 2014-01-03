@@ -6,6 +6,10 @@
 *.user
 *.sln.docstates
 
+# VS files
+*.vsmdi
+*.testsettings
+
 # Build results
 
 [Dd]ebug/
