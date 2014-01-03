@@ -74,6 +74,7 @@ namespace runner.Build.success.test
             // copied from official gitlab ci runner spec
             BuildInfo buildInfo = new BuildInfo();
             buildInfo.commands = new string[] {"dir"};
+            buildInfo.allow_git_fetch = false;
             buildInfo.project_id = 0;
             buildInfo.id = 9312;
             buildInfo.repo_url = "https://github.com/randx/six.git";
@@ -83,6 +84,7 @@ namespace runner.Build.success.test
 
             gitlab_ci_runner.runner.Build target = new gitlab_ci_runner.runner.Build(buildInfo);
             target.run();
+            Console.WriteLine(target.output);
             Assert.AreEqual(target.state, State.SUCCESS);
         }
     }

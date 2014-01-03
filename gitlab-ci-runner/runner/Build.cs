@@ -143,7 +143,7 @@ namespace gitlab_ci_runner.runner
             }
 
             // Check if already a git repo
-            if (Directory.Exists(sProjectDir + @"\.git"))
+            if (Directory.Exists(sProjectDir + @"\.git") && buildInfo.allow_git_fetch)
             {
                 // Already a git repo, pull changes
                 commands.AddLast(fetchCmd());
@@ -152,7 +152,11 @@ namespace gitlab_ci_runner.runner
             else
             {
                 // No git repo, checkout
+                if (Directory.Exists(sProjectDir))
+                    DeleteDirectory(sProjectDir);
+
                 commands.AddLast(cloneCmd());
+                commands.AddLast(checkoutCmd());
             }
         }
 
@@ -208,6 +212,7 @@ namespace gitlab_ci_runner.runner
                 p.Start();
                 p.BeginOutputReadLine();
                 p.BeginErrorReadLine();
+
                 if (!p.WaitForExit(iTimeout*1000))
                 {
                     p.Kill();
@@ -297,6 +302,28 @@ namespace gitlab_ci_runner.runner
             sCmd += " && git fetch";
 
             return sCmd;
+        }
+
+        /// <summary>
+        /// Delete non empty directory tree
+        /// </summary>
+        private void DeleteDirectory(string target_dir)
+        {
+            string[] files = Directory.GetFiles(target_dir);
+            string[] dirs = Directory.GetDirectories(target_dir);
+
+            foreach (string file in files)
+            {
+                File.SetAttributes(file, FileAttributes.Normal);
+                File.Delete(file);
+            }
+
+            foreach (string dir in dirs)
+            {
+                DeleteDirectory(dir);
+            }
+
+            Directory.Delete(target_dir, false);
         }
     }
 }
