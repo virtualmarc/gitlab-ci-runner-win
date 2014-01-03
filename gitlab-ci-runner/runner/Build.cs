@@ -77,9 +77,14 @@ namespace gitlab_ci_runner.runner
 
         /// <summary>
         /// Command Timeout
-        /// Read from Gitlab CI API later
         /// </summary>
-        public int iTimeout = 7200;
+        public int iTimeout
+        {
+            get
+            {
+                return this.buildInfo.timeout;
+            }
+        }
 
         /// <summary>
         /// Constructor
@@ -189,7 +194,7 @@ namespace gitlab_ci_runner.runner
                 p.StartInfo.EnvironmentVariables["CI_SERVER_VERSION"] = null; // GitlabCI Version
                 p.StartInfo.EnvironmentVariables["CI_SERVER_REVISION"] = null; // GitlabCI Revision
 
-                p.StartInfo.EnvironmentVariables["CI_BUILD_REF"] = buildInfo.reference;
+                p.StartInfo.EnvironmentVariables["CI_BUILD_REF"] = buildInfo.sha;
                 p.StartInfo.EnvironmentVariables["CI_BUILD_REF_NAME"] = buildInfo.ref_name;
                 p.StartInfo.EnvironmentVariables["CI_BUILD_ID"] = buildInfo.id.ToString();
 
@@ -237,7 +242,7 @@ namespace gitlab_ci_runner.runner
             String sCmd = "";
 
             // SSH Key Path Fix
-            
+
             // Change to drive
             sCmd = sProjectDir.Substring(0, 1) + ":";
             // Change to directory
@@ -245,7 +250,7 @@ namespace gitlab_ci_runner.runner
             // Git Reset
             sCmd += " && git reset --hard";
             // Git Checkout
-            sCmd += " && git checkout " + buildInfo.reference;
+            sCmd += " && git checkout " + buildInfo.sha;
 
             return sCmd;
         }
@@ -267,7 +272,7 @@ namespace gitlab_ci_runner.runner
             // Change to directory
             sCmd += " && cd " + sProjectDir;
             // Git Checkout
-            sCmd += " && git checkout " + buildInfo.reference;
+            sCmd += " && git checkout " + buildInfo.sha;
 
             return sCmd;
         }

@@ -9,9 +9,13 @@ namespace gitlab_ci_runner.helper.json
     {
         public int id;
         public int project_id;
+        public string project_name;
         public string[] commands;
         public string repo_url;
-        public string reference;
-        public string ref_name;
+        public string sha;
+        public string before_sha;
+        public string ref_name;         // ref
+        public int timeout;
+        public bool allow_git_fetch;
     }
 }

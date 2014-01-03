@@ -128,10 +128,14 @@ namespace gitlab_ci_runner.helper
                         BuildInfo info = new BuildInfo();
                         info.id = obj.Get<int>("id");
                         info.project_id = obj.Get<int>("project_id");
-						info.commands = System.Text.RegularExpressions.Regex.Replace(obj.Get<string>("commands"), "[\r|\n]+$", "\n").Split('\n');
+                        info.project_name = obj.Get("project_name");
+                        info.commands = System.Text.RegularExpressions.Regex.Replace(obj.Get<string>("commands"), "[\r|\n]+$", "\n").Split('\n');
                         info.repo_url = obj.Get("repo_url");
-                        info.reference = obj.Get("sha");
+                        info.sha = obj.Get("sha");
+                        info.before_sha = obj.Get("before_sha");
                         info.ref_name = obj.Get("ref");
+                        info.timeout = obj.Get<int>("timeout");
+                        info.allow_git_fetch = obj.Get<bool>("allow_git_fetch");
                         return info;
                     }
                 }
