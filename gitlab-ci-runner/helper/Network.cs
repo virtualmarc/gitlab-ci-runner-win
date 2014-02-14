@@ -15,19 +15,19 @@ namespace gitlab_ci_runner.helper
 {
     class Network
     {
-		private static string webRequest(string sUrl, string sMethod, string sContent) {
-			WebRequest wr = HttpWebRequest.Create(sUrl);
-			wr.ContentType = "application/x-www-form-urlencoded;charset=utf-8";
-			wr.ContentLength = sContent.Length;
-			wr.Timeout = 2500;
-			wr.Method = sMethod;
-			StreamWriter requestStream = new StreamWriter(wr.GetRequestStream(), Encoding.ASCII);
-			requestStream.Write(sContent);
-			requestStream.Close();
-			StreamReader responseRequest = new StreamReader(wr.GetResponse().GetResponseStream(), Encoding.UTF8);
-			return responseRequest.ReadToEnd();
-		}
-		
+        private static string webRequest(string sUrl, string sMethod, string sContent) {
+            WebRequest wr = HttpWebRequest.Create(sUrl);
+            wr.ContentType = "application/x-www-form-urlencoded;charset=utf-8";
+            wr.ContentLength = sContent.Length;
+            wr.Timeout = 2500;
+            wr.Method = sMethod;
+            StreamWriter requestStream = new StreamWriter(wr.GetRequestStream(), Encoding.ASCII);
+            requestStream.Write(sContent);
+            requestStream.Close();
+            StreamReader responseRequest = new StreamReader(wr.GetResponse().GetResponseStream(), Encoding.UTF8);
+            return responseRequest.ReadToEnd();
+        }
+        
         /// <summary>
         /// PUT a String to an URL
         /// </summary>
@@ -38,7 +38,7 @@ namespace gitlab_ci_runner.helper
         {
             try
             {
-                return webRequest(sUrl, "PUT",sContent);
+                return webRequest(sUrl, "PUT", sContent);
             }
             catch (Exception)
             {
@@ -134,7 +134,7 @@ namespace gitlab_ci_runner.helper
                         info.sha = obj.Get("sha");
                         info.before_sha = obj.Get("before_sha");
                         info.ref_name = obj.Get("ref");
-						info.timeout = int.Parse(obj.Get("timeout") ?? "1800");
+                        info.timeout = int.Parse(obj.Get("timeout") ?? "1800");
                         info.allow_git_fetch = obj.Get<bool>("allow_git_fetch");
                         return info;
                     }
@@ -178,7 +178,11 @@ namespace gitlab_ci_runner.helper
             {
                 sPutBody += "waiting";
             }
-            sPutBody += "&trace=" + Uri.EscapeDataString(sTrace);
+            sPutBody += "&trace=";
+            string traceString = "";
+            foreach (string t in sTrace.Split('\n'))
+                traceString += Uri.EscapeDataString((traceString.Length == 0 ? "" : "\n") + t);
+            sPutBody += traceString;
 
             int iTry = 0;
             while (iTry <= 5)
