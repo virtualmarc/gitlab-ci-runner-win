@@ -42,11 +42,11 @@ namespace gitlab_ci_runner.runner
             get
             {
                 string sOut = "";
-                foreach (string line in __output)
+                foreach (string line in __output.ToList())
                 {
                     sOut += line + "\n";
                 }
-				return sOut;
+                return sOut;
             }
         }
 
