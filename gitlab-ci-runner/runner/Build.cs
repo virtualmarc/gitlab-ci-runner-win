@@ -95,7 +95,7 @@ namespace gitlab_ci_runner.runner
             this.buildInfo = buildInfo;
             sProjectDir = sProjectsDir + @"\project-" + buildInfo.project_id;
             commands = new LinkedList<string>();
-            __output.clear();
+            __output.Clear();
         }
 
         /// <summary>
