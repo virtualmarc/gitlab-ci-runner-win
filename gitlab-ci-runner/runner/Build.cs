@@ -185,7 +185,7 @@ namespace gitlab_ci_runner.runner
                     p.StartInfo.WorkingDirectory = sProjectDir; // Set Current Working Directory to project directory
                 }
                 p.StartInfo.FileName = "cmd.exe"; // use cmd.exe so we dont have to split our command in file name and arguments
-                p.StartInfo.Arguments = "/C \"" + sCommand.Replace("\"", "\\\"") + "\""; // pass full command as arguments
+                p.StartInfo.Arguments = "/C \"" + sCommand + "\""; // pass full command as arguments
 
                 // Environment variables
                 p.StartInfo.EnvironmentVariables["HOME"] = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile); // Fix for missing SSH Key
