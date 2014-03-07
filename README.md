@@ -19,7 +19,7 @@ Don't forget to add the git/bin directory (usually C:\Program Files\Git\bin) to 
 Installation
 ------------
 
-Just checkout this repository, open the project in visual studio 2013 and compile yourself or use one of our precompiled binaries.
+Just checkout this repository, open the project in visual studio 2013 and compile yourself.
 
 The configuration initialization begins on the first run.
 
