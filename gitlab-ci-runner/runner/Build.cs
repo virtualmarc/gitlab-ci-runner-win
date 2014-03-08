@@ -321,7 +321,11 @@ namespace gitlab_ci_runner.runner
 
             foreach (string dir in dirs)
             {
-                DeleteDirectory(dir);
+                // Only recurse into "normal" directories
+                if ((File.GetAttributes(dir) & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint)
+                    Directory.Delete(dir, false);
+                else
+                    DeleteDirectory(dir);
             }
 
             Directory.Delete(target_dir, false);
