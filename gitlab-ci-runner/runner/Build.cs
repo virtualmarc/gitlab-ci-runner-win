@@ -13,26 +13,14 @@ namespace gitlab_ci_runner.runner
     {
         /// <summary>
         /// Build completed?
-        /// Build internal!
         /// </summary>
-        private bool __completed = false;
-
-        /// <summary>
-        /// Build completed?
-        /// </summary>
-        public bool completed
-        {
-            get
-            {
-                return __completed;
-            }
-        }
+        public bool completed { get; private set; }
 
         /// <summary>
         /// Command output
         /// Build internal!
         /// </summary>
-        private static LinkedList<string> __output = new LinkedList<string>();
+        private LinkedList<string> outputList;
 
         /// <summary>
         /// Command output
@@ -41,12 +29,11 @@ namespace gitlab_ci_runner.runner
         {
             get
             {
-                string sOut = "";
-                foreach (string line in __output.ToList())
+                while (outputList.First != null && string.IsNullOrEmpty(outputList.First.Value))
                 {
-                    sOut += line + "\n";
+                    outputList.RemoveFirst();
                 }
-                return sOut;
+                return String.Join("\n", outputList) + "\n";
             }
         }
 
@@ -95,7 +82,8 @@ namespace gitlab_ci_runner.runner
             this.buildInfo = buildInfo;
             sProjectDir = sProjectsDir + @"\project-" + buildInfo.project_id;
             commands = new LinkedList<string>();
-            __output.Clear();
+            outputList = new LinkedList<string>();
+            completed = false;
         }
 
         /// <summary>
@@ -128,7 +116,7 @@ namespace gitlab_ci_runner.runner
             {
                 state = State.SUCCESS;
             }
-            __completed = true;
+            completed = true;
         }
 
         /// <summary>
@@ -173,9 +161,9 @@ namespace gitlab_ci_runner.runner
                 sCommand = sCommand.Trim();
 
                 // Output command
-                __output.AddLast("");
-                __output.AddLast(sCommand);
-                __output.AddLast("");
+                outputList.AddLast("");
+                outputList.AddLast(sCommand);
+                outputList.AddLast("");
 
                 // Build process
                 Process p = new Process();
@@ -209,16 +197,24 @@ namespace gitlab_ci_runner.runner
                 p.OutputDataReceived += new DataReceivedEventHandler(outputHandler);
                 p.ErrorDataReceived += new DataReceivedEventHandler(outputHandler);
 
-                // Run the command
-                p.Start();
-                p.BeginOutputReadLine();
-                p.BeginErrorReadLine();
-
-                if (!p.WaitForExit(iTimeout*1000))
+                try
                 {
-                    p.Kill();
+                    // Run the command
+                    p.Start();
+                    p.BeginOutputReadLine();
+                    p.BeginErrorReadLine();
+
+                    if (!p.WaitForExit(iTimeout * 1000))
+                    {
+                        p.Kill();
+                    }
+                    return p.ExitCode == 0;
                 }
-                return p.ExitCode == 0;
+                finally
+                {
+                    p.OutputDataReceived -= new DataReceivedEventHandler(outputHandler);
+                    p.ErrorDataReceived -= new DataReceivedEventHandler(outputHandler);
+                }
             }
             catch (Exception)
             {
@@ -231,11 +227,11 @@ namespace gitlab_ci_runner.runner
         /// </summary>
         /// <param name="sendingProcess">Source process</param>
         /// <param name="outLine">Output Line</param>
-        private static void outputHandler(object sendingProcess, DataReceivedEventArgs outLine)
+        private void outputHandler(object sendingProcess, DataReceivedEventArgs outLine)
         {
             if (!String.IsNullOrEmpty(outLine.Data))
             {
-                __output.AddLast(outLine.Data);
+                outputList.AddLast(outLine.Data);
             }
         }
 

@@ -15,7 +15,8 @@ namespace gitlab_ci_runner.helper
 {
     class Network
     {
-        private static string webRequest(string sUrl, string sMethod, string sContent) {
+        private static string webRequest(string sUrl, string sMethod, string sContent)
+        {
             WebRequest wr = HttpWebRequest.Create(sUrl);
             wr.ContentType = "application/x-www-form-urlencoded;charset=utf-8";
             wr.ContentLength = sContent.Length;
@@ -27,7 +28,7 @@ namespace gitlab_ci_runner.helper
             StreamReader responseRequest = new StreamReader(wr.GetResponse().GetResponseStream(), Encoding.UTF8);
             return responseRequest.ReadToEnd();
         }
-        
+
         /// <summary>
         /// PUT a String to an URL
         /// </summary>
@@ -160,7 +161,7 @@ namespace gitlab_ci_runner.helper
         /// <returns></returns>
         public static bool pushBuild(int iId, State state, string sTrace)
         {
-            Console.WriteLine("[" + DateTime.Now.ToString() + "] Submitting build " + iId + " to coordinator ...");
+            Console.WriteLine("[" + DateTime.Now + "] Submitting build " + iId + " to coordinator ...");
             String sPutBody = "token=" + Uri.EscapeDataString(Config.token) + "&state=";
             if (state == State.RUNNING)
             {
@@ -178,11 +179,7 @@ namespace gitlab_ci_runner.helper
             {
                 sPutBody += "waiting";
             }
-            sPutBody += "&trace=";
-            string traceString = "";
-            foreach (string t in sTrace.Split('\n'))
-                traceString += Uri.EscapeDataString((traceString.Length == 0 ? "" : "\n") + t);
-            sPutBody += traceString;
+            sPutBody += "&trace=" + Uri.EscapeDataString(sTrace);
 
             int iTry = 0;
             while (iTry <= 5)
