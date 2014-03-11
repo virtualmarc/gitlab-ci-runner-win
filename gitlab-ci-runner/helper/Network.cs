@@ -15,7 +15,8 @@ namespace gitlab_ci_runner.helper
 {
     class Network
     {
-        private static string webRequest(string sUrl, string sMethod, string sContent) {
+        private static string webRequest(string sUrl, string sMethod, string sContent)
+        {
             WebRequest wr = HttpWebRequest.Create(sUrl);
             wr.ContentType = "application/x-www-form-urlencoded;charset=utf-8";
             wr.ContentLength = sContent.Length;
@@ -27,7 +28,7 @@ namespace gitlab_ci_runner.helper
             StreamReader responseRequest = new StreamReader(wr.GetResponse().GetResponseStream(), Encoding.UTF8);
             return responseRequest.ReadToEnd();
         }
-        
+
         /// <summary>
         /// PUT a String to an URL
         /// </summary>
@@ -160,50 +161,48 @@ namespace gitlab_ci_runner.helper
         /// <returns></returns>
         public static bool pushBuild(int iId, State state, string sTrace)
         {
-            Console.WriteLine("[" + DateTime.Now.ToString() + "] Submitting build " + iId + " to coordinator ...");
-            String sPutBody = "token=" + Uri.EscapeDataString(Config.token) + "&state=";
+            Console.WriteLine("[" + DateTime.Now + "] Submitting build " + iId + " to coordinator ...");
+            var sPutBody = new StringBuilder();
+            
+            sPutBody.Append("token=").Append(Uri.EscapeDataString(Config.token));
+            
+            sPutBody.Append("&state=");
             if (state == State.RUNNING)
             {
-                sPutBody += "running";
+                sPutBody.Append("running");
             }
             else if (state == State.SUCCESS)
             {
-                sPutBody += "success";
+                sPutBody.Append("success");
             }
             else if (state == State.FAILED)
             {
-                sPutBody += "failed";
+                sPutBody.Append("failed");
             }
             else
             {
-                sPutBody += "waiting";
+                sPutBody.Append("waiting");
             }
-            sPutBody += "&trace=";
-            string traceString = "";
+            
+            sPutBody.Append("&trace=");
             foreach (string t in sTrace.Split('\n'))
-                traceString += Uri.EscapeDataString((traceString.Length == 0 ? "" : "\n") + t);
-            sPutBody += traceString;
+                sPutBody.Append(Uri.EscapeDataString(t)).Append("\n");
 
             int iTry = 0;
             while (iTry <= 5)
             {
                 try
                 {
-                    if (put(apiurl + "/builds/" + iId + ".json", sPutBody) != null)
+                    if (put(apiurl + "/builds/" + iId + ".json", sPutBody.ToString()) != null)
                     {
                         return true;
                     }
-                    else
-                    {
-                        iTry++;
-                        Thread.Sleep(1000);
-                    }
                 }
-                catch (Exception)
-                {
-                    iTry++;
-                    Thread.Sleep(1000);
-                }
+                catch
+                { }
+
+                iTry++;
+                Thread.Sleep(1000);
             }
 
             return false;
