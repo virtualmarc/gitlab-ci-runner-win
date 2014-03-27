@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using gitlab_ci_runner.helper.json;
+using Microsoft.Experimental.IO;
 
 namespace gitlab_ci_runner.runner
 {
@@ -313,20 +314,41 @@ namespace gitlab_ci_runner.runner
 
             foreach (string file in files)
             {
-                File.SetAttributes(file, FileAttributes.Normal);
-                File.Delete(file);
+                try
+                {
+                    File.SetAttributes(file, FileAttributes.Normal);
+                    File.Delete(file);
+                }
+                catch (PathTooLongException)
+                {
+                    LongPathFile.Delete(file);
+                }
             }
 
             foreach (string dir in dirs)
             {
                 // Only recurse into "normal" directories
                 if ((File.GetAttributes(dir) & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint)
-                    Directory.Delete(dir, false);
+                    try
+                    {
+                        Directory.Delete(dir, false);
+                    }
+                    catch (PathTooLongException)
+                    {
+                        LongPathDirectory.Delete(dir);
+                    }
                 else
                     DeleteDirectory(dir);
             }
 
-            Directory.Delete(target_dir, false);
+            try
+            {
+                Directory.Delete(target_dir, false);
+            }
+            catch (PathTooLongException)
+            {
+                LongPathDirectory.Delete(target_dir);
+            }
         }
     }
 }
