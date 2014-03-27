@@ -95,30 +95,41 @@ namespace gitlab_ci_runner.runner
         public void run()
         {
             state = State.RUNNING;
+            
+            try {
 
-            // Initialize project dir
-            initProjectDir();
-
-            // Add build commands
-            foreach (string sCommand in buildInfo.commands)
-            {
-                commands.AddLast(sCommand);
-            }
-
-            // Execute
-            foreach (string sCommand in commands)
-            {
-                if (!exec(sCommand))
+                // Initialize project dir
+                initProjectDir();
+    
+                // Add build commands
+                foreach (string sCommand in buildInfo.commands)
                 {
-                    state = State.FAILED;
-                    break;
+                    commands.AddLast(sCommand);
                 }
+    
+                // Execute
+                foreach (string sCommand in commands)
+                {
+                    if (!exec(sCommand))
+                    {
+                        state = State.FAILED;
+                        break;
+                    }
+                }
+    
+                if (state == State.RUNNING)
+                {
+                    state = State.SUCCESS;
+                }
+                
+            } catch (Exception rex) {
+                outputList.Enqueue("");
+                outputList.Enqueue("A runner exception occoured: " + rex.Message);
+                outputList.Enqueue("");
+                state = State.FAILED;
             }
-
-            if (state == State.RUNNING)
-            {
-                state = State.SUCCESS;
-            }
+            
+            
             completed = true;
         }
 
