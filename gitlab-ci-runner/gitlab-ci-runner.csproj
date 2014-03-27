@@ -38,6 +38,9 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.Experimental.IO">
+      <HintPath>..\packages\Microsoft.Experimental.IO.1.0.0.0\lib\NETFramework40\Microsoft.Experimental.IO.dll</HintPath>
+    </Reference>
     <Reference Include="ServiceStack.Text">
       <HintPath>..\packages\ServiceStack.Text.3.9.63\lib\net35\ServiceStack.Text.dll</HintPath>
     </Reference>
