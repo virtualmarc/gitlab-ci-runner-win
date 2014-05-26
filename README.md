@@ -26,3 +26,8 @@ The configuration initialization begins on the first run.
 After the first run the config is written and you can start the runner in the background.
 
 To register the runner as service try the [NSSM](http://nssm.cc/). But remember to run the service as the user you created the config with!
+
+Options
+-------
+
+If your CI server is using a self-signed certificate you can add -sslbypass option in argument 

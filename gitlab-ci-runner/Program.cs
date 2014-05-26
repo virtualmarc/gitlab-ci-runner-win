@@ -18,6 +18,12 @@ namespace gitlab_ci_runner
             Console.InputEncoding = Encoding.Default;
             Console.OutputEncoding = Encoding.Default;
             ServicePointManager.DefaultConnectionLimit = 999;
+
+			if (args.Contains ("-sslbypass"))
+			{
+				Program.RegisterSecureSocketsLayerBypass ();
+			}
+
             if (Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location).Substring(0, 1) == @"\") {
                 Console.WriteLine("Can't run on UNC Path");
             } else {
@@ -35,5 +41,16 @@ namespace gitlab_ci_runner
             Console.WriteLine("Runner quit. Press any key to exit!");
             Console.ReadKey();
         }
+
+		static void RegisterSecureSocketsLayerBypass()
+		{
+			System.Net.ServicePointManager.ServerCertificateValidationCallback +=
+            delegate (object sender, System.Security.Cryptography.X509Certificates.X509Certificate certificate,
+									System.Security.Cryptography.X509Certificates.X509Chain chain,
+									System.Net.Security.SslPolicyErrors sslPolicyErrors)
+			{
+				return true; // **** Always accept
+			};
+		}
     }
 }
