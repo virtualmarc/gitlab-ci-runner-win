@@ -4,6 +4,10 @@ using System.Linq;
 using System.Text;
 using ServiceStack;
 
+
+/// <summary>
+/// V1 API
+/// </summary>
 namespace gitlab_ci_runner.api
 {
 	[Route ("/runners/register.json","POST")]
@@ -74,7 +78,7 @@ namespace gitlab_ci_runner.api
 		}
 	}
 
-	class BuildInfo
+	public class BuildInfo
 	{
 		public int id
 		{
