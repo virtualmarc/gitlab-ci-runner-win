@@ -1,7 +1,7 @@
 ﻿using gitlab_ci_runner.runner;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using gitlab_ci_runner.helper.json;
+using gitlab_ci_runner.api;
 
 namespace runner.Build.success.test
 {
@@ -73,7 +73,7 @@ namespace runner.Build.success.test
         {
             // copied from official gitlab ci runner spec
             BuildInfo buildInfo = new BuildInfo();
-            buildInfo.commands = new string[] {"dir"};
+            buildInfo.commands = "dir";
             buildInfo.allow_git_fetch = false;
             buildInfo.project_id = 0;
             buildInfo.id = 9312;
