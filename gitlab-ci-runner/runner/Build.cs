@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using gitlab_ci_runner.helper.json;
+using gitlab_ci_runner.api;
 using Microsoft.Experimental.IO;
 
 namespace gitlab_ci_runner.runner
@@ -102,7 +102,7 @@ namespace gitlab_ci_runner.runner
                 initProjectDir();
     
                 // Add build commands
-                foreach (string sCommand in buildInfo.commands)
+                foreach (string sCommand in buildInfo.GetCommands ())
                 {
                     commands.AddLast(sCommand);
                 }

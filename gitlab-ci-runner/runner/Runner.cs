@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using gitlab_ci_runner.api;
 using gitlab_ci_runner.helper;
-using gitlab_ci_runner.helper.json;
 
 namespace gitlab_ci_runner.runner
 {
