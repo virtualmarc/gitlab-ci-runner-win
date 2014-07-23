@@ -29,7 +29,7 @@ namespace gitlab_ci_runner.helper
             } catch (Exception) {}
             Process p = new Process();
             p.StartInfo.FileName = "ssh-keygen";
-            p.StartInfo.Arguments = "-t rsa -f " + Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"\.ssh\id_rsa -N """;
+            p.StartInfo.Arguments = "-t rsa -f \"" + Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + "\\.ssh\\id_rsa\" -N \"\"";
             p.Start();
             Console.WriteLine();
             Console.WriteLine("Waiting for SSH Key to be generated ...");
