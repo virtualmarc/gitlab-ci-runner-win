@@ -127,7 +127,7 @@ namespace gitlab_ci_runner.helper
             
             var trace = new StringBuilder();
             foreach (string t in sTrace.Split('\n'))
-                trace.Append(Uri.EscapeDataString(t)).Append("\n");
+                trace.Append(t).Append("\n");
 
             int iTry = 0;
             while (iTry <= 5)
