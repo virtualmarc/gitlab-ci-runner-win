@@ -16,13 +16,39 @@ namespace gitlab_ci_runner.runner
         private static Build build = null;
 
         /// <summary>
+        /// Set to true to shutdown the process
+        /// </summary>
+        private static volatile bool shutdown = false;
+
+        /// <summary>
+        /// The polling thread
+        /// </summary>
+        private static Thread waitForBuildThread = null;
+
+        /// <summary>
         /// Start the configured runner
         /// </summary>
         public static void run()
         {
             Console.WriteLine("* Gitlab CI Runner started");
             Console.WriteLine("* Waiting for builds");
-            waitForBuild();
+
+            waitForBuildThread = new Thread(waitForBuild);
+            waitForBuildThread.Start();
+        }
+
+        /// <summary>
+        /// Stop the runner
+        /// </summary>
+        public static void stop()
+        {
+            shutdown = true;
+
+            if (waitForBuildThread != null)
+            {
+                waitForBuildThread.Join();
+                waitForBuildThread = null;
+            }
         }
 
         /// <summary>
@@ -52,7 +78,7 @@ namespace gitlab_ci_runner.runner
         /// </summary>
         private static void waitForBuild()
         {
-            while (true)
+            while (!shutdown || completed || running)
             {
                 if (completed || running)
                 {
@@ -65,7 +91,8 @@ namespace gitlab_ci_runner.runner
                     // Get new build
                     getBuild();
                 }
-                Thread.Sleep(5000);
+
+                Thread.Sleep(2000);
             }
         }
 
