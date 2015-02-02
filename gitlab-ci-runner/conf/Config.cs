@@ -4,7 +4,9 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Security.Principal;
 using System.Text;
+using Microsoft.Win32;
 using gitlab_ci_runner.helper;
 
 namespace gitlab_ci_runner.conf
@@ -22,20 +24,27 @@ namespace gitlab_ci_runner.conf
         public static string token;
 
         /// <summary>
-        /// Configuration Path
+        /// Registry key name
         /// </summary>
-        private static string confPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\runner.cfg";
+        private static string keyName = "HKEY_LOCAL_MACHINE\\SOFTWARE\\GitLab\\CI-Runner";
 
         /// <summary>
         /// Load the configuration
         /// </summary>
         public static void loadConfig()
         {
-            if (File.Exists(confPath))
+            var value = Registry.GetValue(keyName, "url", null);
+
+            if (value != null)
             {
-                IniFile ini = new IniFile(confPath);
-                url = ini.IniReadValue("main", "url");
-                token = ini.IniReadValue("main", "token");
+                url = value.ToString();
+            }
+
+            value = Registry.GetValue(keyName, "token", null);
+
+            if (value != null)
+            {
+                token = value.ToString();
             }
         }
 
@@ -44,14 +53,18 @@ namespace gitlab_ci_runner.conf
         /// </summary>
         public static void saveConfig()
         {
-            if (File.Exists(confPath))
-            {
-                File.Delete(confPath);
-            }
+            WindowsPrincipal pricipal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
+            bool hasAdministrativeRight = pricipal.IsInRole(WindowsBuiltInRole.Administrator);
 
-            IniFile ini = new IniFile(confPath);
-            ini.IniWriteValue("main", "url", url);
-            ini.IniWriteValue("main", "token", token);
+            if (hasAdministrativeRight)
+            {
+                Registry.SetValue(keyName, "url", url, RegistryValueKind.String);
+                Registry.SetValue(keyName, "token", token, RegistryValueKind.String);
+            }
+            else
+            {
+                Console.WriteLine("This process needs to be run with administrative priviledges to save the configuration.");
+            }
         }
 
         /// <summary>
@@ -60,14 +73,7 @@ namespace gitlab_ci_runner.conf
         /// <returns>true if configured, false if not</returns>
         public static bool isConfigured()
         {
-            if (url != null && url != "" && token != null && token != "")
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            return (!string.IsNullOrEmpty(url) && !string.IsNullOrEmpty(token));
         }
     }
 }
