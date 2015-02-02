@@ -49,22 +49,32 @@ namespace gitlab_ci_runner.conf
         }
 
         /// <summary>
-        /// Save the configuration
+        /// Determines if the user can save the config
         /// </summary>
-        public static void saveConfig()
+        public static bool canSaveConfig()
         {
             WindowsPrincipal pricipal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
-            bool hasAdministrativeRight = pricipal.IsInRole(WindowsBuiltInRole.Administrator);
 
-            if (hasAdministrativeRight)
+            return pricipal.IsInRole(WindowsBuiltInRole.Administrator);
+        }
+
+        /// <summary>
+        /// Save the configuration
+        /// </summary>
+        public static bool saveConfig()
+        {
+            if (canSaveConfig())
             {
                 Registry.SetValue(keyName, "url", url, RegistryValueKind.String);
                 Registry.SetValue(keyName, "token", token, RegistryValueKind.String);
+                return true;
             }
             else
             {
                 Console.WriteLine("This process needs to be run with administrative priviledges to save the configuration.");
             }
+
+            return false;
         }
 
         /// <summary>
