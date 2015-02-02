@@ -39,8 +39,8 @@
             // 
             // gitlabServiceInstaller
             // 
-            this.gitlabServiceInstaller.Description = "GitLab CI Windows Runner";
-            this.gitlabServiceInstaller.DisplayName = "The Runner for Windows for GitLab CI";
+            this.gitlabServiceInstaller.Description = "The Runner for Windows for GitLab CI";
+            this.gitlabServiceInstaller.DisplayName = "GitLab CI Windows Runner";
             this.gitlabServiceInstaller.ServiceName = "GitlabCIRunner";
             this.gitlabServiceInstaller.StartType = System.ServiceProcess.ServiceStartMode.Automatic;
             // 
