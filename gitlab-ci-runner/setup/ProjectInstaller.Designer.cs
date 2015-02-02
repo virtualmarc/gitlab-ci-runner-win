@@ -28,9 +28,33 @@
         /// </summary>
         private void InitializeComponent()
         {
-            components = new System.ComponentModel.Container();
+            this.gitLabServiceProcessInstaller = new System.ServiceProcess.ServiceProcessInstaller();
+            this.gitlabServiceInstaller = new System.ServiceProcess.ServiceInstaller();
+            // 
+            // gitLabServiceProcessInstaller
+            // 
+            this.gitLabServiceProcessInstaller.Account = System.ServiceProcess.ServiceAccount.LocalSystem;
+            this.gitLabServiceProcessInstaller.Password = null;
+            this.gitLabServiceProcessInstaller.Username = null;
+            // 
+            // gitlabServiceInstaller
+            // 
+            this.gitlabServiceInstaller.Description = "GitLab CI Windows Runner";
+            this.gitlabServiceInstaller.DisplayName = "The Runner for Windows for GitLab CI";
+            this.gitlabServiceInstaller.ServiceName = "GitlabCIRunner";
+            this.gitlabServiceInstaller.StartType = System.ServiceProcess.ServiceStartMode.Automatic;
+            // 
+            // ProjectInstaller
+            // 
+            this.Installers.AddRange(new System.Configuration.Install.Installer[] {
+            this.gitLabServiceProcessInstaller,
+            this.gitlabServiceInstaller});
+
         }
 
         #endregion
+
+        private System.ServiceProcess.ServiceProcessInstaller gitLabServiceProcessInstaller;
+        private System.ServiceProcess.ServiceInstaller gitlabServiceInstaller;
     }
 }
