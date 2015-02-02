@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using gitlab_ci_runner.conf;
+using gitlab_ci_runner.helper;
 using gitlab_ci_runner.runner;
 using gitlab_ci_runner.setup;
 
@@ -56,7 +57,7 @@ namespace gitlab_ci_runner
 
 			if (args.Contains ("-sslbypass"))
 			{
-				Program.RegisterSecureSocketsLayerBypass ();
+				Network.RegisterSecureSocketsLayerBypass ();
 			}
 
             if (Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location).Substring(0, 1) == @"\") {
@@ -84,16 +85,5 @@ namespace gitlab_ci_runner
             Console.WriteLine("Runner quit. Press any key to exit!");
             Console.ReadKey();
         }
-
-		static void RegisterSecureSocketsLayerBypass()
-		{
-			System.Net.ServicePointManager.ServerCertificateValidationCallback +=
-            delegate (object sender, System.Security.Cryptography.X509Certificates.X509Certificate certificate,
-									System.Security.Cryptography.X509Certificates.X509Chain chain,
-									System.Net.Security.SslPolicyErrors sslPolicyErrors)
-			{
-				return true; // **** Always accept
-			};
-		}
     }
 }
