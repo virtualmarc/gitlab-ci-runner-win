@@ -28,9 +28,6 @@ namespace gitlab_ci_runner.setup
             Config.url = sCoordUrl;
             Console.WriteLine();
 
-            // Generate SSH Keys
-            SSHKey.generateKeypair();
-
             // Register Runner
             registerRunner();
         }
@@ -49,7 +46,7 @@ namespace gitlab_ci_runner.setup
             }
 
             // Register Runner
-            string sTok = Network.registerRunner(SSHKey.getPublicKey(), sToken);
+            string sTok = Network.registerRunner(sToken);
             if (sTok != null)
             {
                 // Save Config
