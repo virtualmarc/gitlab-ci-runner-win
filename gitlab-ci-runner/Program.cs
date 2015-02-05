@@ -6,6 +6,7 @@ using System.Text;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.ServiceProcess;
 using System.Threading;
 using gitlab_ci_runner.conf;
 using gitlab_ci_runner.helper;
@@ -48,42 +49,58 @@ namespace gitlab_ci_runner
 
         static void Main(string[] args)
         {
-            _handler += new EventHandler(Handler);
-            SetConsoleCtrlHandler(_handler, true);
-
-            Console.InputEncoding = Encoding.Default;
-            Console.OutputEncoding = Encoding.Default;
             ServicePointManager.DefaultConnectionLimit = 999;
 
-			if (args.Contains ("-sslbypass"))
-			{
-				Network.RegisterSecureSocketsLayerBypass ();
-			}
-
-            if (Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location).Substring(0, 1) == @"\") {
-                Console.WriteLine("Can't run on UNC Path");
-            } else {
-                Console.WriteLine("Starting Gitlab CI Runner for Windows");
-                Config.loadConfig();
-                if (Config.isConfigured()) {
-                    // Load the runner
-                    Console.WriteLine("Press Ctrl+C to shutdown");
-                    
-                    Runner.run();
-
-                    while (!exitSystem)
-                    {
-                        Thread.Sleep(500);
-                    }
-                } else {
-                    // Load the setup
-                    Setup.run();
-                }
+            if (args.Contains("-sslbypass"))
+            {
+                Network.RegisterSecureSocketsLayerBypass();
             }
 
-            Console.WriteLine();
-            Console.WriteLine("Runner quit. Press any key to exit!");
-            Console.ReadKey();
+            if (Environment.UserInteractive)
+            {
+                _handler += new EventHandler(Handler);
+                SetConsoleCtrlHandler(_handler, true);
+
+                Console.InputEncoding = Encoding.Default;
+                Console.OutputEncoding = Encoding.Default;
+
+                if (Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location).Substring(0, 1) == @"\")
+                {
+                    Console.WriteLine("Can't run on UNC Path");
+                }
+                else
+                {
+                    Console.WriteLine("Starting Gitlab CI Runner for Windows");
+                    Config.loadConfig();
+                    if (Config.isConfigured())
+                    {
+                        // Load the runner
+                        Console.WriteLine("Press Ctrl+C to shutdown");
+
+                        Runner.run();
+
+                        while (!exitSystem)
+                        {
+                            Thread.Sleep(500);
+                        }
+                    }
+                    else
+                    {
+                        // Load the setup
+                        Setup.run();
+                    }
+                }
+
+                Console.WriteLine();
+                Console.WriteLine("Runner quit. Press any key to exit!");
+                Console.ReadKey();
+            }
+            else
+            {
+                ServiceBase[] ServicesToRun; 
+                ServicesToRun = new ServiceBase[] { new service.runnerservice() }; 
+                ServiceBase.Run(ServicesToRun);
+            }
         }
     }
 }

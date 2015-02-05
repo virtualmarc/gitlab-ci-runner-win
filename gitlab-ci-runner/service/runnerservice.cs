@@ -19,29 +19,17 @@ namespace gitlab_ci_runner.service
         public runnerservice()
         {
             InitializeComponent();
-        }
-
-        protected override void OnStart(string[] args)
-        {
-            Console.InputEncoding = Encoding.Default;
-            Console.OutputEncoding = Encoding.Default;
-            ServicePointManager.DefaultConnectionLimit = 999;
-
-            if (args.Contains("-sslbypass"))
-            {
-                Network.RegisterSecureSocketsLayerBypass();
-            }
 
             Config.loadConfig();
 
-            if (Config.isConfigured())
-            {
-                Runner.run();
-            }
-            else
-            {
-                throw new Exception("Please configure by run the application in the console in admintration mode.");
-            }
+            if (!Config.isConfigured())
+                throw new Exception("Please configure by running the application via an administrative command prompt.");
+        }
+                
+
+        protected override void OnStart(string[] args)
+        {
+            Runner.run();
         }
 
         protected override void OnStop()

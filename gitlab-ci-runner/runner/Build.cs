@@ -129,7 +129,6 @@ namespace gitlab_ci_runner.runner
                 state = State.FAILED;
             }
             
-            
             completed = true;
         }
 
