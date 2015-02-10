@@ -29,7 +29,7 @@ namespace gitlab_ci_runner.service
 
         protected override void OnStart(string[] args)
         {
-            Runner.run();
+            Runner.run(true);
         }
 
         protected override void OnStop()

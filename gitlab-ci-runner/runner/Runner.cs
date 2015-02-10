@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -26,10 +27,28 @@ namespace gitlab_ci_runner.runner
         private static Thread waitForBuildThread = null;
 
         /// <summary>
+        /// Event Log string
+        /// </summary>
+        private const string eventSource = "GitLab CI Runner";
+
+        /// <summary>
+        /// Set to true when running as a service so it knows to write to the event logs
+        /// </summary>
+        private static bool runningAsService = false;
+
+        /// <summary>
         /// Start the configured runner
         /// </summary>
-        public static void run()
+        public static void run(bool isService = false)
         {
+            runningAsService = isService;
+
+            // Create event source for logging if not present
+            if (runningAsService && !EventLog.SourceExists(eventSource))
+            {
+                EventLog.CreateEventSource(eventSource, eventSource);
+            }
+
             Console.WriteLine("* Gitlab CI Runner started");
             Console.WriteLine("* Waiting for builds");
 
@@ -106,6 +125,11 @@ namespace gitlab_ci_runner.runner
                 // Build finished
                 if (pushBuild())
                 {
+                    if (runningAsService)
+                    {
+                        EventLog.WriteEntry(eventSource, string.Format("Completed build of '{1}', build No {0}", build.buildInfo.id, build.buildInfo.project_name), EventLogEntryType.Information);
+                    }
+
                     Console.WriteLine("[" + DateTime.Now.ToString() + "] Completed build " + build.buildInfo.id);
                     build = null;
                 }
@@ -137,6 +161,12 @@ namespace gitlab_ci_runner.runner
                 // Create Build Job
                 build = new Build(binfo);
                 Console.WriteLine("[" + DateTime.Now.ToString() + "] Build " + binfo.id + " started...");
+
+                if (runningAsService)
+                { 
+                    EventLog.WriteEntry(eventSource, string.Format("Starting build of '{1}', build No {0}", binfo.id, binfo.project_name), EventLogEntryType.Information);
+                }
+
                 Thread t = new Thread(build.run);
                 t.Start();
             }
