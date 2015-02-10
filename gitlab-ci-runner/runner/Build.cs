@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using gitlab_ci_runner.api;
+using gitlab_ci_runner.conf;
 using Microsoft.Experimental.IO;
 
 namespace gitlab_ci_runner.runner
@@ -39,11 +40,6 @@ namespace gitlab_ci_runner.runner
                 return String.Join("\n", outputList.ToArray()) + "\n";
             }
         }
-
-        /// <summary>
-        /// Projects Directory
-        /// </summary>
-        private string sProjectsDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\projects";
 
         /// <summary>
         /// Project Directory
@@ -83,7 +79,7 @@ namespace gitlab_ci_runner.runner
         public Build(BuildInfo buildInfo)
         {
             this.buildInfo = buildInfo;
-            sProjectDir = sProjectsDir + @"\project-" + buildInfo.project_id;
+            sProjectDir =  Config.projectFolder + @"\project-" + buildInfo.project_id;
             commands = new LinkedList<string>();
             outputList = new ConcurrentQueue<string>();
             completed = false;
@@ -138,10 +134,10 @@ namespace gitlab_ci_runner.runner
         private void initProjectDir()
         {
             // Check if projects directory exists
-            if (!Directory.Exists(sProjectsDir))
+            if (!Directory.Exists(Config.projectFolder))
             {
                 // Create projects directory
-                Directory.CreateDirectory(sProjectsDir);
+                Directory.CreateDirectory(Config.projectFolder);
             }
 
             // Check if already a git repo
@@ -281,7 +277,7 @@ namespace gitlab_ci_runner.runner
             // Change to drive
             sCmd = sProjectDir.Substring(0, 1) + ":";
             // Change to directory
-            sCmd += " && cd " + sProjectsDir;
+            sCmd += " && cd " + Config.projectFolder;
             // Git Clone
             sCmd += " && git clone " + buildInfo.repo_url + " project-" + buildInfo.project_id;
             // Change to directory

@@ -24,6 +24,11 @@ namespace gitlab_ci_runner.conf
         public static string token;
 
         /// <summary>
+        /// Gitlab CI project folder
+        /// </summary>
+        public static string projectFolder;
+
+        /// <summary>
         /// Registry key name
         /// </summary>
         private static string keyName = "HKEY_LOCAL_MACHINE\\SOFTWARE\\GitLab\\CI-Runner";
@@ -46,6 +51,17 @@ namespace gitlab_ci_runner.conf
             {
                 token = value.ToString();
             }
+
+            value = Registry.GetValue(keyName, "folder", null);
+
+            if (value != null)
+            {
+                projectFolder = value.ToString();
+            }
+            else
+            {
+                projectFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\projects";
+            }
         }
 
         /// <summary>
@@ -67,6 +83,8 @@ namespace gitlab_ci_runner.conf
             {
                 Registry.SetValue(keyName, "url", url, RegistryValueKind.String);
                 Registry.SetValue(keyName, "token", token, RegistryValueKind.String);
+                Registry.SetValue(keyName, "folder", projectFolder, RegistryValueKind.String);
+
                 return true;
             }
             else

@@ -35,6 +35,17 @@ namespace gitlab_ci_runner.setup
             Config.url = sCoordUrl;
             Console.WriteLine();
 
+            // Read the project folder
+            String sProjectFolder = "";
+
+            Console.WriteLine("Please enter the project build folder, or press enter for the default (" + Config.projectFolder + ")");
+            sProjectFolder = Console.ReadLine();
+
+            if (sProjectFolder != "")
+                Config.projectFolder = sProjectFolder;
+
+            Console.WriteLine();
+
             // Register Runner
             registerRunner();
         }
