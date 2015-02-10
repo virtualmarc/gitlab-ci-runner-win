@@ -21,11 +21,11 @@ Installation
 
 Just checkout this repository, open the project in Visual Studio 2013 and compile it yourself.
 
-The configuration initialization begins on the first run.
+The configuration initialization begins on the first run, but must be via an administrative command line as the settings are written to the registry.
 
 After the first run the config is written and you can start the runner in the background.
 
-To register the runner as service try the [NSSM](http://nssm.cc/). But remember to run the service as the user you created the config with!
+The application can be installed as a service by running the InstallUtil (e.g. c:\Windows\Microsoft.NET\Framework\v4.0.30319\InstallUtil.exe gitlab-ci-runner.exe) from an administrative command line.
 
 Options
 -------
