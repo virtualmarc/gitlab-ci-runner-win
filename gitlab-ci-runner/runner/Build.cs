@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Text;
 using gitlab_ci_runner.api;
 using Microsoft.Experimental.IO;
+using gitlab_ci_runner.conf;
 
 namespace gitlab_ci_runner.runner
 {
@@ -39,11 +40,6 @@ namespace gitlab_ci_runner.runner
                 return String.Join("\n", outputList.ToArray()) + "\n";
             }
         }
-
-        /// <summary>
-        /// Projects Directory
-        /// </summary>
-        private string sProjectsDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\projects";
 
         /// <summary>
         /// Project Directory
@@ -83,10 +79,26 @@ namespace gitlab_ci_runner.runner
         public Build(BuildInfo buildInfo)
         {
             this.buildInfo = buildInfo;
-            sProjectDir = sProjectsDir + @"\project-" + buildInfo.project_id;
+            Config.PrebuildConfig cfg = Config.getDataForBuild(buildInfo);
+
+            if (cfg.ProjectDir != "")
+            {
+                if (Path.IsPathRooted(cfg.ProjectDir))
+                {
+                    sProjectDir = cfg.ProjectDir;
+                }
+                else 
+                {
+                    sProjectDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\" + cfg.ProjectDir;
+                }
+            }
+            sProjectDir = sProjectDir.EndsWith(@"\") ? sProjectDir : sProjectDir + @"\";
+            
             commands = new LinkedList<string>();
             outputList = new ConcurrentQueue<string>();
             completed = false;
+
+            commands.AddFirst("echo \"Project directory is set to: " + cfg.ProjectDir + "\"");
         }
 
         /// <summary>
@@ -138,6 +150,8 @@ namespace gitlab_ci_runner.runner
         /// </summary>
         private void initProjectDir()
         {
+
+            string sProjectsDir = System.IO.Directory.GetParent(sProjectDir).FullName;
             // Check if projects directory exists
             if (!Directory.Exists(sProjectsDir))
             {
@@ -146,20 +160,29 @@ namespace gitlab_ci_runner.runner
             }
 
             // Check if already a git repo
-            if (Directory.Exists(sProjectDir + @"\.git") && buildInfo.allow_git_fetch)
+            if (Directory.Exists(sProjectDir + @".git") && buildInfo.allow_git_fetch)
             {
+                //string status = String.Format("Git repo exists ({0}) and fetch command is allowed (allow_git_fetch={1})", sProjectDir + @".git", Convert.ToString(buildInfo.allow_git_fetch));
+                //commands.AddLast("echo \"" + status + "\"");
+
                 // Already a git repo, pull changes
                 commands.AddLast(fetchCmd());
-                commands.AddLast(checkoutCmd());
             }
             else
             {
                 // No git repo, checkout
                 if (Directory.Exists(sProjectDir))
+                {
                     DeleteDirectory(sProjectDir);
+                }
 
                 commands.AddLast(cloneCmd());
-                commands.AddLast(checkoutCmd());
+            }
+
+            Config.PrebuildConfig cfg = Config.getDataForBuild(buildInfo);
+            if (cfg.PostPrepare != "")
+            {
+                commands.AddLast(cfg.PostPrepare);
             }
         }
 
@@ -250,45 +273,31 @@ namespace gitlab_ci_runner.runner
         }
 
         /// <summary>
-        /// Get the Checkout CMD
-        /// </summary>
-        /// <returns>Checkout CMD</returns>
-        private string checkoutCmd()
-        {
-            String sCmd = "";
-
-            // SSH Key Path Fix
-
-            // Change to drive
-            sCmd = sProjectDir.Substring(0, 1) + ":";
-            // Change to directory
-            sCmd += " && cd " + sProjectDir;
-            // Git Reset
-            sCmd += " && git reset --hard";
-            // Git Checkout
-            sCmd += " && git checkout " + buildInfo.sha;
-
-            return sCmd;
-        }
-
-        /// <summary>
         /// Get the Clone CMD
         /// </summary>
         /// <returns>Clone CMD</returns>
         private string cloneCmd()
         {
+            Config.PrebuildConfig cfg = Config.getDataForBuild(buildInfo);
             String sCmd = "";
 
             // Change to drive
             sCmd = sProjectDir.Substring(0, 1) + ":";
             // Change to directory
-            sCmd += " && cd " + sProjectsDir;
-            // Git Clone
-            sCmd += " && git clone " + buildInfo.repo_url + " project-" + buildInfo.project_id;
-            // Change to directory
-            sCmd += " && cd " + sProjectDir;
-            // Git Checkout
-            sCmd += " && git checkout " + buildInfo.sha;
+            sCmd += " && cd " + System.IO.Directory.GetParent(sProjectDir.TrimEnd('\\')).FullName;
+            if (cfg.NewRepoInit == "")
+            {
+                // Git Clone
+                sCmd += " && git clone " + buildInfo.repo_url + " " + Path.GetFileName(sProjectDir.TrimEnd('\\'));
+                // Change to directory
+                sCmd += " && cd " + sProjectDir;
+                // Git Checkout
+                sCmd += " && git checkout " + buildInfo.sha;
+            }
+            else
+            {
+                sCmd += " && " + cfg.NewRepoInit;
+            }
 
             return sCmd;
         }
@@ -305,12 +314,24 @@ namespace gitlab_ci_runner.runner
             sCmd = sProjectDir.Substring(0, 1) + ":";
             // Change to directory
             sCmd += " && cd " + sProjectDir;
-            // Git Reset
-            sCmd += " && git reset --hard";
-            // Git Clean
-            sCmd += " && git clean -f";
-            // Git fetch
-            sCmd += " && git fetch";
+
+            Config.PrebuildConfig cfg = Config.getDataForBuild(buildInfo);
+            if (cfg.ExistingRepoInit == "")
+            {
+                // Git Reset
+                sCmd += " && git reset --hard";
+                // Git Clean
+                sCmd += " && git clean -f";
+                // Git fetch
+                sCmd += " && git fetch";
+                // Git Checkout
+                sCmd += " && git checkout " + buildInfo.sha;
+            }
+            else
+            {
+                sCmd += " && " + cfg.ExistingRepoInit;
+            }
+
 
             return sCmd;
         }
