@@ -18,12 +18,6 @@ namespace gitlab_ci_runner.api
 			get;
 			set;
 		}
-
-		public string public_key
-		{
-			get;
-			set;
-		}
 	}
 
 	[Route ("/builds/register.json", "POST")]

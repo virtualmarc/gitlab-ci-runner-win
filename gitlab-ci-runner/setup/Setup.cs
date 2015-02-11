@@ -15,6 +15,13 @@ namespace gitlab_ci_runner.setup
         public static void run()
         {
             Console.WriteLine("This seems to be the first run,");
+
+            if (!Config.canSaveConfig())
+            {
+                Console.WriteLine("Please run the application with administrative priviledges which are required to save configuration.");
+                return;
+            }
+
             Console.WriteLine("please provide the following info to proceed:");
             Console.WriteLine();
 
@@ -28,8 +35,16 @@ namespace gitlab_ci_runner.setup
             Config.url = sCoordUrl;
             Console.WriteLine();
 
-            // Generate SSH Keys
-            SSHKey.generateKeypair();
+            // Read the project folder
+            String sProjectFolder = "";
+
+            Console.WriteLine("Please enter the project build folder, or press enter for the default (" + Config.projectFolder + ")");
+            sProjectFolder = Console.ReadLine();
+
+            if (sProjectFolder != "")
+                Config.projectFolder = sProjectFolder;
+
+            Console.WriteLine();
 
             // Register Runner
             registerRunner();
@@ -49,20 +64,21 @@ namespace gitlab_ci_runner.setup
             }
 
             // Register Runner
-            string sTok = Network.registerRunner(SSHKey.getPublicKey(), sToken);
+            string sTok = Network.registerRunner(sToken);
             if (sTok != null)
             {
                 // Save Config
                 Config.token = sTok;
-                Config.saveConfig();
-
-                Console.WriteLine();
-                Console.WriteLine("Runner registered successfully. Feel free to start it!");
+                if (Config.saveConfig())
+                { 
+                    Console.WriteLine();
+                    Console.WriteLine("Runner registered successfully. Feel free to start it!");
+                }
             }
             else
             {
                 Console.WriteLine();
-                Console.WriteLine("Failed to register this runner. Perhaps your SSH key is invalid or you are having network problems");
+                Console.WriteLine("Failed to register this runner. Perhaps you are having network problems");
             }
         }
     }
