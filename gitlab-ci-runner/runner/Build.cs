@@ -202,7 +202,7 @@ namespace gitlab_ci_runner.runner
                 p.StartInfo.EnvironmentVariables["CI_SERVER_REVISION"] = null; // GitlabCI Revision
 
                 p.StartInfo.EnvironmentVariables["CI_BUILD_REF"] = buildInfo.sha;
-                p.StartInfo.EnvironmentVariables["CI_BUILD_REF_NAME"] = buildInfo.ref_name;
+                p.StartInfo.EnvironmentVariables["CI_BUILD_REF_NAME"] = buildInfo.@ref;
                 p.StartInfo.EnvironmentVariables["CI_BUILD_ID"] = buildInfo.id.ToString();
 
                 // Redirect Standard Output and Standard Error

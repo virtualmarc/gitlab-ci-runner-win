@@ -80,7 +80,7 @@ namespace runner.Build.success.test
             buildInfo.repo_url = "https://github.com/randx/six.git";
             buildInfo.sha = "2e008a711430a16092cd6a20c225807cb3f51db7";
             buildInfo.timeout = 1800;
-            buildInfo.ref_name = "master";
+            buildInfo.@ref = "master";
 
             gitlab_ci_runner.runner.Build target = new gitlab_ci_runner.runner.Build(buildInfo);
             target.run();
