@@ -77,16 +77,37 @@ namespace gitlab_ci_runner.runner
             if (build.completed)
             {
                 // Build finished
-                if (pushBuild())
+                State currentState = pushBuild();
+
+                if (currentState == State.SUCCESS)
                 {
                     Console.WriteLine("[" + DateTime.Now.ToString() + "] Completed build " + build.buildInfo.id);
+                    build = null;
+                }
+                else if (currentState == State.FAILED)
+                {
+                    Console.WriteLine("[" + DateTime.Now.ToString() + "] Completed build but failed to push last status.");
                     build = null;
                 }
             }
             else
             {
                 // Build is currently running
-                pushBuild();
+                State currentState = pushBuild();
+
+                if (currentState == State.FAILED)
+                {
+                    Console.WriteLine("[" + DateTime.Now.ToString() + "] Failed to push build status.");
+                }
+                else if (currentState == State.ABORTED)
+                {
+                    Console.WriteLine("[" + DateTime.Now.ToString() + "] Build was aborted remotely, stopping.");
+                    build.terminate();
+                    build = null;
+                }
+                else if (currentState == State.SUCCESS)
+                {
+                }
             }
         }
 
@@ -94,7 +115,7 @@ namespace gitlab_ci_runner.runner
         /// PUSH Build Status to Gitlab CI
         /// </summary>
         /// <returns>true on success, false on fail</returns>
-        private static bool pushBuild()
+        private static State pushBuild()
         {
             return Network.pushBuild(build.buildInfo.id, build.state, build.output);
         }
@@ -105,6 +126,8 @@ namespace gitlab_ci_runner.runner
         private static void getBuild()
         {
             BuildInfo binfo = Network.getBuild();
+            
+            // New build was requested
             if (binfo != null)
             {
                 // Create Build Job
