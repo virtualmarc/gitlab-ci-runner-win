@@ -10,6 +10,7 @@ namespace gitlab_ci_runner.runner
         RUNNING,
         FAILED,
         SUCCESS,
-        WAITING
+        WAITING,
+        ABORTED
     }
 }
