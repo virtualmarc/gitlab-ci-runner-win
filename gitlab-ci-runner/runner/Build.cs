@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Management;
 using gitlab_ci_runner.api;
 using Microsoft.Experimental.IO;
 
@@ -13,6 +14,46 @@ namespace gitlab_ci_runner.runner
 {
     class Build
     {
+        /// <summary>
+        /// Destructor - Making sure that the process object is killed!
+        /// </summary>
+        ~Build()  // destructor
+        {
+            // cleanup statements...
+            if (process != null)
+            {
+                killProcessAndChildren(process.Id);
+                process.Close();
+                process = null;
+            }
+        }
+
+        /// <summary>
+        /// Kill a process, and all of its children, grandchildren, etc.
+        /// Need to add System.Management to References manually to enable this.
+        /// </summary>
+        /// <param name="pid">Process ID.</param>
+        private static void killProcessAndChildren(int pid)
+        {
+            ManagementObjectSearcher searcher = new ManagementObjectSearcher
+              ("Select * From Win32_Process Where ParentProcessID=" + pid);
+            
+            ManagementObjectCollection moc = searcher.Get();
+            foreach (ManagementObject mo in moc)
+            {
+                killProcessAndChildren(Convert.ToInt32(mo["ProcessID"]));
+            }
+            try
+            {
+                Process proc = Process.GetProcessById(pid);
+                proc.Kill();
+            }
+            catch (ArgumentException)
+            {
+                // Process already exited.
+            }
+        }
+
         /// <summary>
         /// Build completed?
         /// </summary>
@@ -23,6 +64,12 @@ namespace gitlab_ci_runner.runner
         /// Build internal!
         /// </summary>
         private ConcurrentQueue<string> outputList;
+
+        /// <summary>
+        /// Process object
+        /// Build internal!
+        /// </summary>
+        private Process process = null;
 
         /// <summary>
         /// Command output
@@ -134,6 +181,31 @@ namespace gitlab_ci_runner.runner
         }
 
         /// <summary>
+        /// Terminate the Build Job
+        /// </summary>
+        public void terminate()
+        {
+            // Build process
+            if (process != null)
+            {
+                try
+                {
+                    killProcessAndChildren(process.Id);
+                    process.Close();
+                    process = null;
+
+                    state = State.ABORTED;
+                    completed = false;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(" Exception caught when terminating build process: ", ex.Message);
+                    return;
+                }
+            }
+        }
+
+        /// <summary>
         /// Initialize project dir and checkout repo
         /// </summary>
         private void initProjectDir()
@@ -180,54 +252,64 @@ namespace gitlab_ci_runner.runner
                 outputList.Enqueue("");
 
                 // Build process
-                Process p = new Process();
-                p.StartInfo.UseShellExecute = false;
+                if (process == null)
+                    process = new Process();
+                else
+                {
+                    killProcessAndChildren(process.Id);
+                    process.Close();
+                    process = null;
+
+                    process = new Process();
+                }
+
+                process.StartInfo.UseShellExecute = false;
                 if (Directory.Exists(sProjectDir))
                 {
-                    p.StartInfo.WorkingDirectory = sProjectDir; // Set Current Working Directory to project directory
+                    process.StartInfo.WorkingDirectory = sProjectDir; // Set Current Working Directory to project directory
                 }
-                p.StartInfo.FileName = "cmd.exe"; // use cmd.exe so we dont have to split our command in file name and arguments
-                p.StartInfo.Arguments = "/C \"" + sCommand + "\""; // pass full command as arguments
+                process.StartInfo.FileName = "cmd.exe"; // use cmd.exe so we dont have to split our command in file name and arguments
+                process.StartInfo.Arguments = "/C \"" + sCommand + "\""; // pass full command as arguments
 
                 // Environment variables
-                p.StartInfo.EnvironmentVariables["HOME"] = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile); // Fix for missing SSH Key
+                process.StartInfo.EnvironmentVariables["HOME"] = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile); // Fix for missing SSH Key
 
-                p.StartInfo.EnvironmentVariables["BUNDLE_GEMFILE"] = sProjectDir + @"\Gemfile";
-                p.StartInfo.EnvironmentVariables["BUNDLE_BIN_PATH"] = "";
-                p.StartInfo.EnvironmentVariables["RUBYOPT"] = "";
+                process.StartInfo.EnvironmentVariables["BUNDLE_GEMFILE"] = sProjectDir + @"\Gemfile";
+                process.StartInfo.EnvironmentVariables["BUNDLE_BIN_PATH"] = "";
+                process.StartInfo.EnvironmentVariables["RUBYOPT"] = "";
 
-                p.StartInfo.EnvironmentVariables["CI_SERVER"] = "yes";
-                p.StartInfo.EnvironmentVariables["CI_SERVER_NAME"] = "GitLab CI";
-                p.StartInfo.EnvironmentVariables["CI_SERVER_VERSION"] = null; // GitlabCI Version
-                p.StartInfo.EnvironmentVariables["CI_SERVER_REVISION"] = null; // GitlabCI Revision
+                process.StartInfo.EnvironmentVariables["CI_SERVER"] = "yes";
+                process.StartInfo.EnvironmentVariables["CI_SERVER_NAME"] = "GitLab CI";
+                process.StartInfo.EnvironmentVariables["CI_SERVER_VERSION"] = null; // GitlabCI Version
+                process.StartInfo.EnvironmentVariables["CI_SERVER_REVISION"] = null; // GitlabCI Revision
 
-                p.StartInfo.EnvironmentVariables["CI_BUILD_REF"] = buildInfo.sha;
-                p.StartInfo.EnvironmentVariables["CI_BUILD_REF_NAME"] = buildInfo.ref_name;
-                p.StartInfo.EnvironmentVariables["CI_BUILD_ID"] = buildInfo.id.ToString();
+                process.StartInfo.EnvironmentVariables["CI_BUILD_REF"] = buildInfo.sha;
+                process.StartInfo.EnvironmentVariables["CI_BUILD_REF_NAME"] = buildInfo.ref_name;
+                process.StartInfo.EnvironmentVariables["CI_BUILD_ID"] = buildInfo.id.ToString();
 
                 // Redirect Standard Output and Standard Error
-                p.StartInfo.RedirectStandardOutput = true;
-                p.StartInfo.RedirectStandardError = true;
-                p.OutputDataReceived += new DataReceivedEventHandler(outputHandler);
-                p.ErrorDataReceived += new DataReceivedEventHandler(outputHandler);
+                process.StartInfo.RedirectStandardOutput = true;
+                process.StartInfo.RedirectStandardError = true;
+                process.OutputDataReceived += new DataReceivedEventHandler(outputHandler);
+                process.ErrorDataReceived += new DataReceivedEventHandler(outputHandler);
 
                 try
                 {
                     // Run the command
-                    p.Start();
-                    p.BeginOutputReadLine();
-                    p.BeginErrorReadLine();
+                    process.Start();
+                    process.BeginOutputReadLine();
+                    process.BeginErrorReadLine();
 
-                    if (!p.WaitForExit(iTimeout * 1000))
+                    if (!process.WaitForExit(iTimeout * 1000))
                     {
-                        p.Kill();
+                        killProcessAndChildren(process.Id);
                     }
-                    return p.ExitCode == 0;
+                    return process.ExitCode == 0;
                 }
                 finally
                 {
-                    p.OutputDataReceived -= new DataReceivedEventHandler(outputHandler);
-                    p.ErrorDataReceived -= new DataReceivedEventHandler(outputHandler);
+                    process.OutputDataReceived -= new DataReceivedEventHandler(outputHandler);
+                    process.ErrorDataReceived -= new DataReceivedEventHandler(outputHandler);
                 }
             }
             catch (Exception)
