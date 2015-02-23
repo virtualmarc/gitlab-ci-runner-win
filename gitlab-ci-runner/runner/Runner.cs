@@ -129,11 +129,7 @@ namespace gitlab_ci_runner.runner
             }
             else if (pushReturnState == State.SUCCESS)
             {
-                // Status update every minute
-         
                 Console.WriteLine("[" + DateTime.Now.ToString() + "] * Successfully submitted build status.");
-                updateIterationCount = 0;
-      
             }
             else
             {

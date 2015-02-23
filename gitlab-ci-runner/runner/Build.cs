@@ -288,19 +288,45 @@ namespace gitlab_ci_runner.runner
                 process.StartInfo.RedirectStandardError = true;
                 process.OutputDataReceived += new DataReceivedEventHandler(outputHandler);
                 process.ErrorDataReceived += new DataReceivedEventHandler(outputHandler);
+                //process.Exited += new EventHandler(process_Exited);
 
                 try
                 {
+                    int exitCode = -1;
                     // Run the command
                     process.Start();
                     process.BeginOutputReadLine();
                     process.BeginErrorReadLine();
 
+                    // Make sure we wait till the process is finished
+                    if (process.WaitForExit(iTimeout * 1000))
+                    {
+                        // https://msdn.microsoft.com/en-us/library/ty0d8k56(v=vs.110).aspx
+                        // When standard output has been redirected to asynchronous event handlers, 
+                        // it is possible that output processing will not have completed when this method returns. 
+                        // To ensure that asynchronous event handling has been completed, call the WaitForExit() 
+                        // overload that takes no parameter after receiving a true from the WaitForExit(Int32) overload. 
+                        process.WaitForExit();
+
+                        if (process.HasExited)
+                        {
+                            // Record the exit code
+                            exitCode = process.ExitCode;
+                        }
+                        else
+                        {
+                            Console.WriteLine("[" + DateTime.Now.ToString() + "] Process " + process.Id + " hasn't exited properly. Exit code might be invalid.");
+                        }
+                    }
+                    /*
                     if (!process.WaitForExit(iTimeout * 1000))
                     {
                         killProcessAndChildren(process.Id);
                     }
-                    return process.ExitCode == 0;
+                    */
+                    // Terminate process
+                    killProcessAndChildren(process.Id);
+                    return (exitCode == 0);
                 }
                 finally
                 {
@@ -308,10 +334,19 @@ namespace gitlab_ci_runner.runner
                     process.ErrorDataReceived -= new DataReceivedEventHandler(outputHandler);
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Console.WriteLine("[" + DateTime.Now.ToString() + "] Process " + process.Id + " failed with exception:  " + ex.Message);
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Handle Exited event and display process information. 
+        /// </summary>
+        private void process_Exited(object sender, System.EventArgs e)
+        {
+            Console.WriteLine("Exit time:    {0}\r\n" + "Exit code:    {1}\r\n", process.ExitTime, process.ExitCode);
         }
 
         /// <summary>
