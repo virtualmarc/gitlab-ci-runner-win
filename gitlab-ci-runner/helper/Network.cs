@@ -103,10 +103,11 @@ namespace gitlab_ci_runner.helper
         /// <param name="state">State</param>
         /// <param name="sTrace">Command output</param>
         /// <returns></returns>
-        public static bool pushBuild(int iId, State state, string sTrace)
+        public static State pushBuild(int iId, State state, string sTrace)
         {
             Console.WriteLine("[" + DateTime.Now + "] Submitting build " + iId + " to coordinator ...");
         
+            State returnState = State.FAILED;
             var stateValue = "";
             if (state == State.RUNNING)
             {
@@ -120,6 +121,10 @@ namespace gitlab_ci_runner.helper
             {
                 stateValue = "failed";
             }
+            else if (state == State.ABORTED)
+            {
+                stateValue = "aborted";
+            }
             else
             {
                 stateValue = "waiting";
@@ -130,30 +135,51 @@ namespace gitlab_ci_runner.helper
                 trace.Append(t).Append("\n");
 
             int iTry = 0;
-            while (iTry <= 5)
+            try
             {
-                try
+                while (iTry <= 5)
                 {
-					var client = new JsonServiceClient(apiurl);
-					var resp = client.Put (new PushBuild { 
-						id = iId + ".json",
-						token = Uri.EscapeDataString(Config.token),
-						state = stateValue,
-						trace = trace.ToString () });
+                    var client = new JsonServiceClient(apiurl);
+                    var resp = client.Put (new PushBuild {
+                        id = iId + ".json",
+                        token = Uri.EscapeDataString(Config.token),
+                        state = stateValue,
+                        trace = trace.ToString () });
 
-                    if (resp != null)
+                    if (resp != null && resp == "null")
                     {
-                        return true;
+                        returnState = State.SUCCESS;
+                        Console.WriteLine("* Success");
+                        break;
                     }
-                }
-                catch
-                { }
 
-                iTry++;
-                Thread.Sleep(1000);
+
+                    iTry++;
+                    Thread.Sleep(1000);
+                }
+            }
+            catch (WebServiceException ex)
+            {
+                Console.WriteLine("[" + DateTime.Now.ToString() + "] Got response when pushing build status :", ex.Message);
+
+                switch (ex.StatusCode)
+                {
+                    case 200:
+                        returnState = State.SUCCESS;
+                        Console.WriteLine("* Success");
+                        break;
+                    case 404:
+                        returnState = State.ABORTED;
+                        Console.WriteLine("* Aborted");
+                        break;
+                    default:
+                        Console.WriteLine("* Failed");
+                        returnState = State.FAILED;
+                        break;
+                }
             }
 
-            return false;
+            return returnState;
         }
     }
 }
