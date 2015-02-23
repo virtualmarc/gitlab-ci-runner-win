@@ -15,6 +15,19 @@ namespace gitlab_ci_runner.runner
     class Build
     {
         /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="buildInfo">Build Info</param>
+        public Build(BuildInfo buildInfo)
+        {
+            this.buildInfo = buildInfo;
+            sProjectDir = sProjectsDir + @"\project-" + buildInfo.project_id;
+            commands = new LinkedList<string>();
+            outputList = new ConcurrentQueue<string>();
+            completed = false;
+        }
+      
+        /// <summary>
         /// Destructor - Making sure that the process object is killed!
         /// </summary>
         ~Build()  // destructor
@@ -121,19 +134,6 @@ namespace gitlab_ci_runner.runner
             {
                 return this.buildInfo.timeout;
             }
-        }
-
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        /// <param name="buildInfo">Build Info</param>
-        public Build(BuildInfo buildInfo)
-        {
-            this.buildInfo = buildInfo;
-            sProjectDir = sProjectsDir + @"\project-" + buildInfo.project_id;
-            commands = new LinkedList<string>();
-            outputList = new ConcurrentQueue<string>();
-            completed = false;
         }
 
         /// <summary>
