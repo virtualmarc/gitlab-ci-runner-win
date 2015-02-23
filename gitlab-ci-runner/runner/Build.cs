@@ -24,7 +24,7 @@ namespace gitlab_ci_runner.runner
             sProjectDir = sProjectsDir + @"\project-" + buildInfo.project_id;
             commands = new LinkedList<string>();
             outputList = new ConcurrentQueue<string>();
-            completed = false;
+            state = State.WAITING;
         }
       
         /// <summary>
@@ -67,10 +67,6 @@ namespace gitlab_ci_runner.runner
             }
         }
 
-        /// <summary>
-        /// Build completed?
-        /// </summary>
-        public bool completed { get; private set; }
 
         /// <summary>
         /// Command output
@@ -123,7 +119,7 @@ namespace gitlab_ci_runner.runner
         /// <summary>
         /// Execution State
         /// </summary>
-        public State state = State.WAITING;
+        public State state { get; private set; }
 
         /// <summary>
         /// Command Timeout
@@ -166,6 +162,7 @@ namespace gitlab_ci_runner.runner
     
                 if (state == State.RUNNING)
                 {
+                    // All commands executed correctly
                     state = State.SUCCESS;
                 }
                 
@@ -174,10 +171,9 @@ namespace gitlab_ci_runner.runner
                 outputList.Enqueue("A runner exception occoured: " + rex.Message);
                 outputList.Enqueue("");
                 state = State.FAILED;
+
+                return;
             }
-            
-            
-            completed = true;
         }
 
         /// <summary>
@@ -195,11 +191,11 @@ namespace gitlab_ci_runner.runner
                     process = null;
 
                     state = State.ABORTED;
-                    completed = false;
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine(" Exception caught when terminating build process: ", ex.Message);
+                    state = State.FAILED;
                     return;
                 }
             }
