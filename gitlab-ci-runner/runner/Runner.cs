@@ -28,22 +28,22 @@ namespace gitlab_ci_runner.runner
         /// <summary>
         /// Build completed?
         /// </summary>
-        public static bool completed
+        public static bool buildCompleted
         {
             get
             {
-                return running && build.completed;
+                return (build != null && build.state == State.SUCCESS);
             }
         }
 
         /// <summary>
         /// Build running?
         /// </summary>
-        public static bool running
+        public static bool buildRunning
         {
             get
             {
-                return build != null;
+                return (build != null && build.state == State.RUNNING);
             }
         }
 
@@ -54,13 +54,17 @@ namespace gitlab_ci_runner.runner
         {
             while (true)
             {
-                if (completed || running)
+                if (build != null && buildRunning)
                 {
-                    // Build is running or completed
-                    // Update build
+                    // Build is running
                     updateBuild();
                 }
-                else
+                else if (build != null)
+                {
+                    // Build failed to start, failed or was aborted
+                    completeBuild();
+                }
+                else if (build == null)
                 {
                     // Get new build
                     getBuild();
@@ -70,45 +74,72 @@ namespace gitlab_ci_runner.runner
         }
 
         /// <summary>
+        /// Final update the currently running build
+        /// </summary>
+        private static void completeBuild()
+        {
+            // Get build status
+            State currentState = build.state;
+
+            if (currentState == State.SUCCESS)
+            {
+                Console.WriteLine("[" + DateTime.Now.ToString() + "] Completed build " + build.buildInfo.id +".");
+            }
+            else if (currentState == State.FAILED)
+            {
+                Console.WriteLine("[" + DateTime.Now.ToString() + "] Build " + build.buildInfo.id +" failed");
+            }
+            else if (currentState == State.ABORTED)
+            {
+                Console.WriteLine("[" + DateTime.Now.ToString() + "] Build " + build.buildInfo.id + " was aborted.");
+            }
+            else
+            {
+                Console.WriteLine("[" + DateTime.Now.ToString() + "] Something went wrong when completing build" + build.buildInfo.id + ".");
+            }
+            
+            // Push the final status
+            pushBuild();
+
+            Console.WriteLine("--------------------------------------------------------");
+
+
+            build.terminate();
+            build = null;
+        }
+
+        /// <summary>
         /// Update the current running build progress
         /// </summary>
         private static void updateBuild()
         {
-            if (build.completed)
-            {
-                // Build finished
-                State currentState = pushBuild();
+            // Build is currently running
+            State pushReturnState = pushBuild();
 
-                if (currentState == State.SUCCESS)
-                {
-                    Console.WriteLine("[" + DateTime.Now.ToString() + "] Completed build " + build.buildInfo.id);
-                    build = null;
-                }
-                else if (currentState == State.FAILED)
-                {
-                    Console.WriteLine("[" + DateTime.Now.ToString() + "] Completed build but failed to push last status.");
-                    build = null;
-                }
+            if (pushReturnState == State.FAILED)
+            {
+                Console.WriteLine("[" + DateTime.Now.ToString() + "] * Failed to push build status.");
+            }
+            else if (pushReturnState == State.ABORTED)
+            {
+                Console.WriteLine("[" + DateTime.Now.ToString() + "] * Build was aborted remotely, stopping...");
+        
+                // We trigger build termination here. That will set the build status to ABORTED or FAILED.
+                build.terminate();
+            }
+            else if (pushReturnState == State.SUCCESS)
+            {
+                // Status update every minute
+         
+                Console.WriteLine("[" + DateTime.Now.ToString() + "] * Successfully submitted build status.");
+                updateIterationCount = 0;
+      
             }
             else
             {
-                // Build is currently running
-                State currentState = pushBuild();
-
-                if (currentState == State.FAILED)
-                {
-                    Console.WriteLine("[" + DateTime.Now.ToString() + "] Failed to push build status.");
-                }
-                else if (currentState == State.ABORTED)
-                {
-                    Console.WriteLine("[" + DateTime.Now.ToString() + "] Build was aborted remotely, stopping.");
-                    build.terminate();
-                    build = null;
-                }
-                else if (currentState == State.SUCCESS)
-                {
-                }
+                Console.WriteLine("[" + DateTime.Now.ToString() + "] * Invalid return state from PushBuild." + pushReturnState.ToString());
             }
+
         }
 
         /// <summary>
