@@ -20,8 +20,8 @@ namespace gitlab_ci_runner {
             Console.InputEncoding = Encoding.Default;
             Console.OutputEncoding = Encoding.Default;
             ApplicationArgs = new OptionSet() {
-				{
-					"admin", "Prevent invoke as lower integrity level", v => {
+                {
+                    "admin", "Prevent invoke as lower integrity level", v => {
                         IgnoreIntegrityLevelCheck = true;
                         Console.BackgroundColor = ConsoleColor.DarkYellow;
                         Console.WriteLine("* Warnings: Using `--admin` flag in High or System integrity level may cause your system changed by CI command or malicious script.");
