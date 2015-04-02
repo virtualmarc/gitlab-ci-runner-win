@@ -69,29 +69,23 @@ namespace gitlab_ci_runner.helper
         {
             Console.WriteLine("* Checking for builds...");
 			var client = new JsonServiceClient (apiurl);
-			try
-			{
-				var buildInfo = client.Post (new CheckForBuild
-				{
-					token = Uri.EscapeDataString (Config.token)
-				});
+            try {
+                var buildInfo = client.Post(new CheckForBuild {
+                    token = Uri.EscapeDataString(Config.token)
+                });
 
-				if (buildInfo != null)
-				{
-					return buildInfo;                  
-				}			
-			}
-			catch (WebServiceException ex)
-			{
-				if(ex.StatusCode == 404)
-				{
-					Console.WriteLine ("* Nothing");
-				}
-				else
-				{
-					Console.WriteLine ("* Failed");
-				}
-			}
+                if (buildInfo != null) {
+                    return buildInfo;
+                }
+            } catch (WebServiceException ex) {
+                if (ex.StatusCode == 404) {
+                    Console.WriteLine("* Nothing");
+                } else {
+                    Console.WriteLine("* Failed");
+                }
+            } catch (Exception ex) {
+                Console.WriteLine("* Uncaught exception ocurred:: {0}", ex.Message);
+            }
 
             return null;
         }
