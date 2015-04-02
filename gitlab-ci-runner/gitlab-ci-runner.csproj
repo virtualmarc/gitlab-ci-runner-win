@@ -68,6 +68,7 @@
   <ItemGroup>
     <Compile Include="api\API.cs" />
     <Compile Include="conf\Config.cs" />
+    <Compile Include="helper\Win32IntegrityLevel.cs" />
     <Compile Include="helper\IniFile.cs" />
     <Compile Include="helper\Network.cs" />
     <Compile Include="helper\SSHKey.cs" />
