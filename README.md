@@ -31,3 +31,9 @@ Options
 -------
 
 If your CI server is using a self-signed certificate you can add -sslbypass option in argument 
+
+
+Contributing
+------------
+
+Please be consistent - use 4 spaces instead of tabs.
