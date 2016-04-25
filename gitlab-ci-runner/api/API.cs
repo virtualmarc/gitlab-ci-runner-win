@@ -122,7 +122,7 @@ namespace gitlab_ci_runner.api
 			set;
 		}
 
-		public string ref_name
+		public string @ref
 		{
 			get;
 			set;
